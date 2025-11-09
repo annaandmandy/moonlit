@@ -1,116 +1,122 @@
-Moon Eclipse Trial — 2D RPG (Phaser 3)
+# Moon Eclipse Trial – Investigator’s Build
 
-A mythological detective RPG inspired by Shan Hai Jing.
-You play a wandering detective accompanied by Baize, exploring a shrine during a blood-moon ritual to uncover the truth behind a divine murder.
+Moonlit Eclipse Trial is a Shan Hai Jing–inspired detective RPG built with Phaser 3 for the exploration layer and a Flask backend for live NPC dialogue and tribunal debates. You begin in Qingqiu Village beside Baize, collect evidence from animated clue markers, and eventually convene a Danganronpa‑style trial in the Moonlit Tribunal.
 
-🎮 Features
+---
 
-2D top-down exploration — player moves with WASD
+## Highlights
 
-Procedural map generation — no assets needed, tiles drawn by code
+- **Procedural multi-map world** – stylized terrain layers for the Qingqiu crime scene, the Moonlit Shrine overworld, and the Council Tribunal chamber.
+- **Animated evidence system** – glowing fire sprites + corpse inspection convert to Memory Book entries and sync to the backend.
+- **Baize companion + cat menu** – talk, open the Memory Book, or fast-travel between scenes from the cat action menu (`V`).
+- **Danganronpa-inspired tribunal** – press `J` in the Council Hall to open the Moonlit Tribunal overlay, scroll the clue board, choose speakers, or submit an “Object!” line.
+- **LLM-powered NPC banter** – the backend merges live clues into `events.json`, uses character personas, and picks the next speaker automatically.
 
-Collisions — walls and altar block movement
+---
 
-Jump ability — press Space to hop over the altar
+## Controls
 
-NPC interactions — press E near Baize to talk
+| Key / UI | Action |
+| --- | --- |
+| `W`, `A`, `S`, `D` | Walk |
+| `E` | Interact with nearby NPCs / clues |
+| `V` | Open the Baize action menu (Memory Book, travel, talk) |
+| `M` | Toggle the strategic map overlay |
+| `J` | (Council Hall only) open the Moonlit Tribunal |
+| `Enter` | Send dialogue / tribunal “Object!” (use `⌘/Ctrl + Enter` inside the tribunal text box) |
+| `Esc` | Close overlays (dialogue, Memory Book, tribunal) |
 
-Dialogue system — HTML overlay with text input
+---
 
-Mock backend chat — player types and gets Baize’s AI-like replies
+## Repository Layout
 
-🧩 Folder Structure
-/src
- ├── main.js          # Phaser setup and scene definition
- ├── assets/          # optional future art (tileset, portraits)
- ├── ui/
- │    ├── dialogue.html
- │    └── ui.css
- └── server/           # (optional backend)
-      └── api.js
+```
+.
+├─ index.html                # Page shell + overlays
+├─ src/
+│  ├─ main.js               # Phaser bootstrapping
+│  ├─ ShrineScene.js        # Core gameplay scene (maps, clues, tribunal hotkeys)
+│  └─ ui/
+│     ├─ ui.css             # Game + overlay styling
+│     └─ tribunal.js        # Moonlit Tribunal client logic
+├─ backend/
+│  ├─ app.py                # Flask API (clues, tribunal events, Gemini calls)
+│  ├─ characters.json       # Persona data per mythological NPC
+│  ├─ events.json           # Tribunal event definitions (auto-filled with discovered clues)
+│  ├─ requirements.txt      # Python dependencies
+│  └─ game_agent.py         # Prototype trial simulator / prompt playground
+├─ clues.json / crime_clues.json
+│                           # Static clue pools merged at runtime
+└─ scripts/
+   └─ setup.sh              # Installs JS + backend deps
+```
 
-⚙️ Setup
-npm install phaser
-npm start
-# then open http://localhost:8080
+---
 
-🗺️ Core Scene Logic (ShrineScene.js)
-- Procedurally generates 20x15 grid of 32px tiles
-- Randomly spawns walls and one central altar
-- Adds player (yellow square)
-- Adds Baize NPC (blue square)
-- Sets collision on walls/altar
-- Enables camera follow and moonlight overlay
+## Prerequisites
 
-💬 Dialogue System (HTML Overlay)
+- Node.js 18+ and npm
+- Python 3.9+ (used for the Flask backend)
+- A Google Generative AI key exposed as `GOOGLE_API_KEY`
 
-When the player presses E near Baize:
+---
 
-A translucent dialogue box appears.
+## One-time Setup
 
-Player can type directly into a text area.
+Run the helper script to install both npm and Python dependencies. It also creates a backend virtual environment under `backend/.venv`.
 
-Press Enter to send —
-currently returns a mock AI reply like:
+```bash
+bash scripts/setup.sh
+```
 
-“The moon remembers what men forget.”
+After the script finishes, activate the backend environment whenever you work on the server:
 
-Future backend plan
+```bash
+source backend/.venv/bin/activate
+```
 
-const res = await fetch("/reply", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ npc: "baize", message: playerText })
-});
-const data = await res.json();
+---
 
-🕹️ Controls
-Key	Action
-WASD	Move
-E	Interact / talk
-Space	Jump (over altar)
-Enter	Send chat message
-Esc	Close dialogue
-🌈 Art & Mood
+## Running the Game
 
-Style: stylized 2D, low-poly, desaturated blues & crimson glow
+1. **Start the backend API** (needs `GOOGLE_API_KEY` in your environment):
 
-Lighting: gradient moonlight overlay
+   ```bash
+   source backend/.venv/bin/activate
+   export GOOGLE_API_KEY="sk-..."   # or add to backend/.env
+   python backend/app.py
+   ```
 
-Baize: white-gold aura
+2. **Start the Phaser client** (serves `index.html` + modules):
 
-NineTailFox (future): crimson eyes, smooth animation
+   ```bash
+   npm start
+   # open http://localhost:8080
+   ```
 
-🧠 Expansion Ideas
+3. **Play loop**
+   - Investigate Qingqiu Village clues (fire markers collectable when close; the corpse counts as its own clue).
+   - Use the Baize menu (`V`) to fast-travel to the Moonlit Shrine grounds or the Council Hall.
+   - Inside the Council Hall press `J` to open the Moonlit Tribunal overlay. The clue board lists only the clues you collected this session, and the chat pane scrolls within the panel.
+   - Use the action buttons: `Auto` lets the AI pick the next speaker, `Select Speaker` uses the dropdown (now includes Xiangliu), and `Object!` sends your own line.
 
-Add NineTailFox NPC with alternate dialogue memory.
+> **Tip:** Clue progress resets on each fresh run so the tribunal always debates the current case state. The Memory Book shows exactly what you’ve logged this session.
 
-Add Trial Scene (Danganronpa-style cross-examination).
+---
 
-Connect real AI backend for dynamic responses.
+## Data & Customization
 
-Store dialogue logs to localStorage for persistent memory.
+- **Clues** – `clues.json` (general shrine) + `crime_clues.json` (Qingqiu) merge on load. Update these files to author new evidence pools.
+- **Characters & prompts** – `backend/characters.json` controls each NPC’s persona, abilities, and emotional tone; adjust to change how they speak in the tribunal.
+- **Events** – `backend/events.json` declares tribunal rosters. `p_clues` can reference `"discovered_clues.json"` to auto-fill with the player’s latest findings.
+- **LLM prompts** – `backend/app.py` contains the narration + speaker selection prompts that emulate the `trial.ipynb` prototype. Tweak them there if you need different behavior.
 
-🪶 Example Dialogue
+---
 
-Baize: “The moonlight shivers… what brings you here?”
-You: “I saw the altar bleed.”
-Baize: “Then truth itself is waking.”
+## Troubleshooting
 
-🧱 Tech Stack
-Area	Tool
-Engine	Phaser 3
-Rendering	Canvas (2D)
-Dialogue	HTML + JS
-Backend (optional)	Node.js / Flask / FastAPI
-Style	Minimal serif UI + gradient overlay
-🧭 Quick Summary
+- **No portrait / blank dropdown** – ensure the backend is running; the tribunal pulls its roster and clues from `/api/tribunal/event/<id>`.
+- **Stuck keys in the tribunal input** – the text box captures WASD/interaction keys as of the current build. If you still see character movement, reload after the latest update.
+- **Google API errors** – verify `GOOGLE_API_KEY` is set before launching `app.py`. Keys rotate frequently; update your secret as needed.
 
-Build Goal:
-Create a procedural-map RPG with a living dialogue agent.
-
-Interaction Flow:
-Explore → Find Baize → Press E → Type & chat → Receive AI replies.
-
-Hackathon Target:
-12-hour playable demo, no art assets required.
+Enjoy unraveling the Moonlit Eclipse Trial!
