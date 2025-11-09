@@ -97,8 +97,10 @@ export default class ShrineScene extends Phaser.Scene {
           tileY: 9,
           scale: 0.4
         },
+        corpseClueIndex: 2,
         ambientFog: 0x050607,
-        spawnMonsters: false
+        spawnMonsters: false,
+        showGridTiles: false
       },
       shrineGrounds: {
         key: 'shrineGrounds',
@@ -143,7 +145,8 @@ export default class ShrineScene extends Phaser.Scene {
           'Mountain Pass',
           'Moonlit Summit'
         ],
-        spawnMonsters: true
+        spawnMonsters: true,
+        showGridTiles: false
       },
       councilChamber: {
         key: 'councilChamber',
@@ -171,7 +174,8 @@ export default class ShrineScene extends Phaser.Scene {
           { npcId: 'xingxing', npcName: 'Xingxing', texture: 'xingxing', areaIndex: 0, tileX: 12, tileY: 14, scale: 0.13 },
           { npcId: 'yingzhao', npcName: 'Yingzhao', texture: 'yingzhao', areaIndex: 0, tileX: 4, tileY: 10, scale: 0.13 },
           { npcId: 'jiuweihu', npcName: 'Nine-Tail Fox', texture: 'jiuweihu', areaIndex: 0, tileX: 20, tileY: 10, scale: 0.13 }
-        ]
+        ],
+        showGridTiles: false
       }
     };
   }
@@ -188,6 +192,7 @@ export default class ShrineScene extends Phaser.Scene {
     this.gridHeight = this.gridRows * this.areaHeight;
     this.areaNames = [...this.currentSceneConfig.areaNames];
     this.areaColors = [...this.currentSceneConfig.areaColors];
+    this.showGridTiles = this.currentSceneConfig.showGridTiles !== undefined ? this.currentSceneConfig.showGridTiles : false;
     if (this.cameras && this.cameras.main) {
       this.cameras.main.setBackgroundColor(this.currentSceneConfig.backgroundColor || '#0a0015');
     }
@@ -252,25 +257,22 @@ export default class ShrineScene extends Phaser.Scene {
   createMap() {
     this.walls = this.physics.add.staticGroup();
 
-    // Create floor with 8 different colored areas
-    for (let x = 0; x < this.gridWidth; x++) {
-      for (let y = 0; y < this.gridHeight; y++) {
-        // Determine which area this tile belongs to
-        const areaCol = Math.floor(x / this.areaWidth);
-        const areaRow = Math.floor(y / this.areaHeight);
-        const areaIndex = areaRow * this.gridCols + areaCol;
-
-        // Get color for this area
-        const areaColor = this.getAreaColor(areaIndex);
-
-        const floor = this.add.rectangle(
-          x * this.tileSize + this.tileSize / 2,
-          y * this.tileSize + this.tileSize / 2,
-          this.tileSize,
-          this.tileSize,
-          areaColor
-        );
-        floor.setStrokeStyle(1, 0x1c2833);
+    if (this.showGridTiles) {
+      for (let x = 0; x < this.gridWidth; x++) {
+        for (let y = 0; y < this.gridHeight; y++) {
+          const areaCol = Math.floor(x / this.areaWidth);
+          const areaRow = Math.floor(y / this.areaHeight);
+          const areaIndex = areaRow * this.gridCols + areaCol;
+          const areaColor = this.getAreaColor(areaIndex);
+          this.add.rectangle(
+            x * this.tileSize + this.tileSize / 2,
+            y * this.tileSize + this.tileSize / 2,
+            this.tileSize,
+            this.tileSize,
+            areaColor,
+            1
+          );
+        }
       }
     }
 
@@ -292,6 +294,8 @@ export default class ShrineScene extends Phaser.Scene {
         }
       }
     }
+
+    this.drawProceduralTerrain();
   }
 
   getAreaColor(areaIndex) {
@@ -973,6 +977,8 @@ export default class ShrineScene extends Phaser.Scene {
     this.corpseSprite = this.add.image(pos.x, pos.y, corpseData.texture || 'corpse');
     this.corpseSprite.setScale(corpseData.scale || 0.6);
     this.corpseSprite.setDepth(2);
+    this.corpseSprite.setInteractive({ useHandCursor: true });
+    this.corpseSprite.on('pointerdown', () => this.handleCorpseClick());
   }
 
   createClueAnimation() {
@@ -996,17 +1002,24 @@ export default class ShrineScene extends Phaser.Scene {
       return;
     }
 
-    fetch('clues.json')
-      .then((res) => res.json())
-      .then((data) => {
-        this.cluesData = data.locations || [];
-        this.preloadedClueData = this.cluesData;
-        window.__GLOBAL_CLUE_DATA = this.cluesData;
-        this.placeClues();
-      })
-      .catch((error) => {
-        console.error('Failed to load clues.json', error);
-      });
+    const basePromise = fetch('clues.json').then((res) => res.json()).catch((error) => {
+      console.error('Failed to load clues.json', error);
+      return { locations: [] };
+    });
+
+    const crimePromise = fetch('crime_clues.json').then((res) => res.json()).catch((error) => {
+      console.warn('Failed to load crime_clues.json', error);
+      return null;
+    });
+
+    Promise.all([basePromise, crimePromise]).then(([baseData, crimeData]) => {
+      const baseLocations = baseData?.locations || [];
+      const merged = this.mergeCrimeSceneClues(baseLocations, crimeData);
+      this.cluesData = merged;
+      this.preloadedClueData = merged;
+      window.__GLOBAL_CLUE_DATA = merged;
+      this.placeClues();
+    });
   }
 
   placeClues() {
@@ -1020,6 +1033,8 @@ export default class ShrineScene extends Phaser.Scene {
     }
     this.clueSprites = [];
 
+    this.corpseClueInfo = null;
+
     const cluesPerArea = 3;
     const allowedAreas = new Set(
       (this.currentSceneConfig.clueAreas && this.currentSceneConfig.clueAreas.length > 0)
@@ -1031,12 +1046,25 @@ export default class ShrineScene extends Phaser.Scene {
     this.cluesData.forEach((location) => {
       const areaIndex = this.areaNames.indexOf(location.name);
       if (areaIndex === -1 || !allowedAreas.has(location.name)) return;
-      const count = Math.min(cluesPerArea, location.clues.length);
+      let count = Math.min(cluesPerArea, location.clues.length);
+      let fireClueCount = count;
+
+      if (this.currentSceneKey === 'qingqiuVillage' && location.name === 'Qingqiu Village') {
+        fireClueCount = Math.min(2, location.clues.length);
+        const corpseIndex = this.currentSceneConfig.corpseClueIndex ?? 2;
+        if (location.clues[corpseIndex]) {
+          this.corpseClueInfo = {
+            area: location.name,
+            beast: location.beast,
+            text: location.clues[corpseIndex].clue
+          };
+        }
+      }
 
       let placements = [];
       const overrides = spawnOverrides[location.name];
       if (overrides && overrides.length) {
-        overrides.slice(0, count).forEach((spawn) => {
+        overrides.slice(0, fireClueCount).forEach((spawn) => {
           const worldPos = this.resolvePosition(
             {
               areaIndex: spawn.areaIndex ?? areaIndex,
@@ -1052,7 +1080,7 @@ export default class ShrineScene extends Phaser.Scene {
           placements.push(worldPos);
         });
       } else {
-        placements = this.getCluePositionsForArea(areaIndex, count);
+        placements = this.getCluePositionsForArea(areaIndex, fireClueCount);
       }
 
       placements.forEach((pos, idx) => {
@@ -1224,6 +1252,19 @@ export default class ShrineScene extends Phaser.Scene {
     }, 2000);
   }
 
+  handleCorpseClick() {
+    if (!this.corpseSprite || !this.corpseClueInfo) {
+      this.showClueToast('Nothing else to inspect here', true);
+      return;
+    }
+    const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.corpseSprite.x, this.corpseSprite.y);
+    if (dist > 80) {
+      this.showClueToast('Get closer to inspect the corpse', true);
+      return;
+    }
+    this.recordClue(this.corpseClueInfo);
+  }
+
   initializeSceneSwitcherUI() {
     this.sceneSwitcherOverlay = document.getElementById('scene-switcher');
     this.sceneSwitcherList = document.getElementById('scene-switcher-list');
@@ -1315,6 +1356,142 @@ export default class ShrineScene extends Phaser.Scene {
     const x = (col * this.areaWidth + tileX) * this.tileSize;
     const y = (row * this.areaHeight + tileY) * this.tileSize;
     return { x, y };
+  }
+  mergeCrimeSceneClues(baseLocations, crimeData) {
+    const mergedLocations = baseLocations.map((location) => ({
+      ...location,
+      clues: Array.isArray(location.clues) ? location.clues.map((clue) => ({ ...clue })) : []
+    }));
+
+    if (!crimeData) return mergedLocations;
+
+    const crimeEntries = Array.isArray(crimeData) ? crimeData : [crimeData];
+
+    crimeEntries.forEach((entry) => {
+      if (!entry || !entry.location || !entry.clues) return;
+
+      const normalizedClues = entry.clues.map((clue) =>
+        typeof clue === 'string' ? { clue } : { clue: clue.clue }
+      );
+
+      const existingIndex = mergedLocations.findIndex((loc) => loc.name === entry.location);
+
+      if (existingIndex >= 0) {
+        mergedLocations[existingIndex] = {
+          ...mergedLocations[existingIndex],
+          beast: entry.beast || mergedLocations[existingIndex].beast,
+          clues: normalizedClues
+        };
+      } else {
+        mergedLocations.push({
+          name: entry.location,
+          beast: entry.beast || 'Unknown',
+          clues: normalizedClues
+        });
+      }
+    });
+
+    return mergedLocations;
+  }
+
+  drawProceduralTerrain() {
+    if (this.terrainLayer) {
+      this.terrainLayer.destroy(true);
+    }
+    this.terrainLayer = this.add.container(0, 0);
+    this.terrainLayer.setDepth(-1);
+
+    const rng = new Phaser.Math.RandomDataGenerator([this.currentSceneKey || 'default-terrain']);
+
+    for (let row = 0; row < this.gridRows; row++) {
+      for (let col = 0; col < this.gridCols; col++) {
+        const areaIndex = row * this.gridCols + col;
+        const baseColor = this.areaColors[areaIndex] !== undefined ? this.areaColors[areaIndex] : 0x1c1f2a;
+        const startX = col * this.areaWidth * this.tileSize;
+        const startY = row * this.areaHeight * this.tileSize;
+        const width = this.areaWidth * this.tileSize;
+        const height = this.areaHeight * this.tileSize;
+
+        const gradient = this.add.graphics({ x: startX, y: startY });
+        const lighter = this.adjustColor(baseColor, 1.1);
+        const darker = this.adjustColor(baseColor, 0.7);
+        gradient.fillGradientStyle(baseColor, lighter, darker, baseColor, 1);
+        gradient.fillRect(0, 0, width, height);
+        this.terrainLayer.add(gradient);
+
+        const noiseBlob = this.add.graphics({ x: startX, y: startY });
+        const blobCount = Phaser.Math.Clamp(Math.round((width * height) / 6000), 4, 12);
+        for (let i = 0; i < blobCount; i++) {
+          const blobX = rng.between(0, width);
+          const blobY = rng.between(0, height);
+          const blobRadiusX = rng.between(40, 80);
+          const blobRadiusY = rng.between(20, 50);
+          const blobColor = this.adjustColor(baseColor, rng.realInRange(0.8, 1.2));
+          noiseBlob.fillStyle(blobColor, 0.25);
+          noiseBlob.fillEllipse(blobX, blobY, blobRadiusX, blobRadiusY);
+        }
+        this.terrainLayer.add(noiseBlob);
+
+        const treeGraphics = this.add.graphics({ x: startX, y: startY });
+        const treeCount = Phaser.Math.Clamp(Math.round((width * height) / 3000), 6, 20);
+        for (let t = 0; t < treeCount; t++) {
+          const tx = rng.between(20, width - 20);
+          const ty = rng.between(30, height - 10);
+          const scale = rng.realInRange(0.6, 1.4);
+          const foliageColor = this.adjustColor(baseColor, rng.realInRange(1.1, 1.4));
+          const trunkColor = this.adjustColor(baseColor, 0.45);
+          this.drawStylizedTree(treeGraphics, tx, ty, scale, foliageColor, trunkColor);
+        }
+        this.terrainLayer.add(treeGraphics);
+
+        const sparkGraphics = this.add.graphics({ x: startX, y: startY });
+        const sparkleCount = Phaser.Math.Clamp(Math.round((width * height) / 8000), 3, 10);
+        for (let s = 0; s < sparkleCount; s++) {
+          const sx = rng.between(0, width);
+          const sy = rng.between(0, height);
+          const radius = rng.realInRange(1, 2.5);
+          sparkGraphics.fillStyle(0xffffff, rng.realInRange(0.1, 0.2));
+          sparkGraphics.fillCircle(sx, sy, radius);
+        }
+        this.terrainLayer.add(sparkGraphics);
+      }
+    }
+  }
+
+  adjustColor(colorInt, multiplier) {
+    const color = Phaser.Display.Color.IntegerToRGB(colorInt);
+    const r = Phaser.Math.Clamp(Math.round(color.r * multiplier), 0, 255);
+    const g = Phaser.Math.Clamp(Math.round(color.g * multiplier), 0, 255);
+    const b = Phaser.Math.Clamp(Math.round(color.b * multiplier), 0, 255);
+    return Phaser.Display.Color.GetColor(r, g, b);
+  }
+
+  drawStylizedTree(graphics, x, y, scale, foliageColor, trunkColor) {
+    const height = 45 * scale;
+    const width = 30 * scale;
+    const trunkHeight = 12 * scale;
+    const trunkWidth = 6 * scale;
+
+    graphics.fillStyle(trunkColor, 0.9);
+    graphics.fillRect(x - trunkWidth / 2, y - trunkHeight, trunkWidth, trunkHeight);
+
+    graphics.fillStyle(foliageColor, 0.9);
+    graphics.fillTriangle(
+      x,
+      y - height,
+      x - width / 2,
+      y - trunkHeight,
+      x + width / 2,
+      y - trunkHeight
+    );
+    graphics.fillTriangle(
+      x,
+      y - height * 0.75,
+      x - width * 0.45,
+      y - trunkHeight - height * 0.2,
+      x + width * 0.45,
+      y - trunkHeight - height * 0.2
+    );
   }
 
   startIntroSequence() {

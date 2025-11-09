@@ -1,0 +1,9 @@
+{
+  "location": "Qingqiu Village",
+  "beast": "Unknown Serpent Shade",
+  "clues": [
+    { "clue": "Blue phosphorescence remains on the altarpiece." },
+    { "clue": "Broken feathers and claw marks litter the ground, but every direction is different — as if multiple attackers collided." },
+    { "clue": "The only witness insists \"multiple shadows\" slid away from the altar after the scream." }
+  ]
+}
