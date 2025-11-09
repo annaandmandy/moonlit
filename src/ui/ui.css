@@ -471,3 +471,91 @@ canvas {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(255, 215, 0, 0.4);
 }
+
+/* Memory book */
+#memory-book {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(5, 5, 15, 0.94);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 3500;
+}
+
+.memory-book-content {
+  width: min(900px, 90vw);
+  max-height: 90vh;
+  background: rgba(12, 12, 28, 0.95);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 16px;
+  padding: 24px 32px;
+  overflow-y: auto;
+  color: #f8f4db;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+}
+
+.memory-book-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.memory-book-header h2 {
+  margin: 0;
+  font-size: 30px;
+  color: #ffd970;
+}
+
+#close-memory-book {
+  background: none;
+  border: none;
+  color: #ffd700;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+#memory-book-empty {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+}
+
+#memory-book-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.memory-clue {
+  padding: 16px;
+  border-radius: 10px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.memory-clue-area {
+  font-weight: bold;
+  color: #ffe28a;
+  margin-bottom: 6px;
+}
+
+#clue-toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 15, 40, 0.95);
+  color: #ffe7b3;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 3600;
+  transition: opacity 0.3s ease;
+}

@@ -1,0 +1,92 @@
+{
+  "locations": [
+    {
+      "name": "Entrance Hall",
+      "beast": "Bifang",
+      "clues": [
+        { "clue": "Charred floor tiles form spiral scorch marks, consistent with fire-element flight bursts." },
+        { "clue": "A feather burned halfway through lies beside an extinguished torch — same pigment as Bifang’s plumage." },
+        { "clue": "Smoke residue reveals traces of copper and oil, suggesting controlled ignition rather than wildfire." },
+        { "clue": "The hall’s braziers were recently relit despite the ban on open flames after the eclipse ritual." },
+        { "clue": "A small molten trail leads toward the outer corridor, indicating something aflame departed hastily." }
+      ]
+    },
+    {
+      "name": "Forest Shrine",
+      "beast": "Kui",
+      "clues": [
+        { "clue": "Lightning scars run down the shrine’s stone columns, though no storm was recorded that night." },
+        { "clue": "A single hoofprint the size of a man’s head is embedded in the mud outside the shrine gate." },
+        { "clue": "The wooden drums of the shrine are split in half as if struck by thunder from within." },
+        { "clue": "Villagers reported hearing rhythmic booms matching Kui’s one-footed gait before dawn." },
+        { "clue": "Fragments of a shattered thunder charm were found lodged in the shrine’s roof tiles." }
+      ]
+    },
+    {
+      "name": "Spirit Garden",
+      "beast": "Qingniao",
+      "clues": [
+        { "clue": "Blue feathers coated in divine pollen were scattered among the sacred lotus." },
+        { "clue": "A trail of shimmering dust leads from the pond to the northern wall, suggesting rapid aerial descent." },
+        { "clue": "Petals singed by friction heat imply repeated low-altitude flight." },
+        { "clue": "A cracked jade pendant inscribed 'Messenger of the West' was retrieved from the garden’s fountain." },
+        { "clue": "Two different avian call patterns were heard the night of the ceremony — one calm, one frantic." }
+      ]
+    },
+    {
+      "name": "Blood Altar",
+      "beast": "Qiongqi",
+      "clues": [
+        { "clue": "Deep claw marks gouge the altar’s base, angled as if tearing upward from within." },
+        { "clue": "Traces of human and beast blood mingle at the center stone; both partially crystallized by heat." },
+        { "clue": "A talisman fragment bears the word 'Justice' written backwards — Qiongqi’s symbol of inverted morality." },
+        { "clue": "Villagers claim a beast laughed during the eclipse thunder, echoing from the altar’s chamber." },
+        { "clue": "An iron chain snapped clean through; its break shows signs of brute force rather than corrosion." }
+      ]
+    },
+    {
+      "name": "Water Temple",
+      "beast": "Xiangliu",
+      "clues": [
+        { "clue": "Nine intertwined serpentine grooves carved into the temple basin pulse faintly when exposed to moonlight." },
+        { "clue": "Residual venom stains on the altar pool surface test positive for ancient toxin markers." },
+        { "clue": "A ritual jar sealed with lead bears a warning: 'Do not unbind before the tide wanes'." },
+        { "clue": "Several small fish float lifeless, their bodies unburned yet bloodless." },
+        { "clue": "A whispering vibration under the temple floor suggests something vast still moves below." }
+      ]
+    },
+    {
+      "name": "Ancient Library",
+      "beast": "Xingxing",
+      "clues": [
+        { "clue": "Dusty scrolls are mis-shelved — all on the topic of spirits serving humans." },
+        { "clue": "White fur strands cling to a ladder leading to the forbidden archive balcony." },
+        { "clue": "Ink stains form distinct paw-shaped prints across several ritual manuscripts." },
+        { "clue": "A witness described a creature 'mimicking human speech' arguing near midnight among the stacks." },
+        { "clue": "A torn parchment references a deal between the ape-spirits and the Fox Clan." }
+      ]
+    },
+    {
+      "name": "Mountain Pass",
+      "beast": "Yingzhao",
+      "clues": [
+        { "clue": "Horse-like hoofprints with deep talon impressions appear at intervals along the mountain trail." },
+        { "clue": "Wind-bent grasses form circular depressions, evidence of powerful wingbeats." },
+        { "clue": "A messenger’s seal carved in bone was found cracked beside a cliff drop." },
+        { "clue": "The sound of flapping wings mixed with a human voice was reported during the storm." },
+        { "clue": "A dropped satchel contained half a celestial map marking the eclipse’s trajectory." }
+      ]
+    },
+    {
+      "name": "Moonlit Summit",
+      "beast": "Jiuweihu",
+      "clues": [
+        { "clue": "Faint perfume and paw prints encircle the summit’s ritual stone." },
+        { "clue": "A broken mirror charm lies beside the path — fox magic often uses reflection illusions." },
+        { "clue": "A trail of golden fur leads toward the ridge where moonlight is strongest." },
+        { "clue": "Fragments of silk garments found — likely humanoid transformation attire." },
+        { "clue": "Witnesses recall a melodic voice chanting alone under the eclipse before screams erupted." }
+      ]
+    }
+  ]
+}

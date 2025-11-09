@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import os
+from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -17,7 +18,7 @@ genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
 def call_gemini(prompt):
     """Call Gemini API with prompt"""
     try:
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("models/gemini-1.5-flash")
         response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
@@ -27,6 +28,23 @@ def call_gemini(prompt):
 CHARACTERS_PATH = os.path.join(os.path.dirname(__file__), 'characters.json')
 with open(CHARACTERS_PATH, 'r', encoding='utf-8') as f:
     CHARACTERS = json.load(f)
+
+DISCOVERED_CLUES_PATH = os.path.join(os.path.dirname(__file__), 'discovered_clues.json')
+
+
+def append_discovered_clue(entry):
+    """Persist discovered clue to JSON log"""
+    log = []
+    if os.path.exists(DISCOVERED_CLUES_PATH):
+        try:
+            with open(DISCOVERED_CLUES_PATH, 'r', encoding='utf-8') as f:
+                log = json.load(f)
+        except json.JSONDecodeError:
+            log = []
+
+    log.append(entry)
+    with open(DISCOVERED_CLUES_PATH, 'w', encoding='utf-8') as f:
+        json.dump(log, f, ensure_ascii=False, indent=2)
 
 class BaizeAgent:
     """Baize (cat companion) agent"""
@@ -211,6 +229,30 @@ def get_character(npc_id):
             'error': str(e),
             'success': False
         }), 500
+
+
+@app.route('/api/clues/log', methods=['POST'])
+def log_clue():
+    """Persist discovered clues from the client"""
+    try:
+        data = request.get_json() or {}
+        area = data.get('area')
+        beast = data.get('beast')
+        text = data.get('text')
+
+        if not area or not beast or not text:
+            return jsonify({'error': 'Missing area, beast, or text'}), 400
+
+        entry = {
+            'area': area,
+            'beast': beast,
+            'text': text,
+            'timestamp': datetime.utcnow().isoformat() + 'Z'
+        }
+        append_discovered_clue(entry)
+        return jsonify({'success': True, 'clue': entry})
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health():

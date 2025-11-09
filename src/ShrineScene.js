@@ -39,6 +39,10 @@ export default class ShrineScene extends Phaser.Scene {
       frameHeight: 50
     });
     this.load.image('cat-sitting', 'images/Cat-5/Cat-5-Sitting.png');
+    this.load.spritesheet('clue-fire', 'images/fire_animation2.png', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
 
     // Load monster images for 8 areas
     this.load.image('bifang', 'images/bifang.png');
@@ -72,16 +76,27 @@ export default class ShrineScene extends Phaser.Scene {
     // Create NPCs and monsters
     this.createNPCs();
 
+    // Clue tracking structures
+    this.clueGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+    this.clueSprites = [];
+    this.discoveredClues = [];
+
     // Ensure physics world matches full grid so players can reach every area
     this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
     // Setup camera - zoom in and follow player
     this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(2);
+    this.cameras.main.setZoom(4.2);
 
     // Setup controls
     this.setupControls();
+    this.physics.add.collider(this.player, this.clueGroup);
+    this.physics.add.collider(this.cat, this.clueGroup);
+
+    this.initializeMemoryBookUI();
+    this.createClueAnimation();
+    this.loadCluesData();
 
     // Story intro
     this.startIntroSequence();
@@ -263,7 +278,7 @@ export default class ShrineScene extends Phaser.Scene {
         const monsterSprite = this.add.sprite(centerX, centerY, monster.key);
 
         // Set display size around 1 tile
-        monsterSprite.setDisplaySize(100, 100);
+        monsterSprite.setDisplaySize(150, 150);
 
         this.physics.add.existing(monsterSprite);
         // Don't make monsters immovable - they shouldn't block player movement
@@ -534,8 +549,7 @@ export default class ShrineScene extends Phaser.Scene {
       this.currentNPC = 'baize';
       this.openDialogue('Baize', 'baize');
     } else if (choice === 'Memory Book') {
-      // TODO: Implement memory book
-      console.log('Memory Book clicked');
+      this.openMemoryBook();
     } else if (choice === 'Settings') {
       // TODO: Implement settings
       console.log('Settings clicked');
@@ -804,6 +818,210 @@ export default class ShrineScene extends Phaser.Scene {
       this.mapAreaLabels.forEach((label) => label.destroy());
       this.mapAreaLabels = null;
     }
+  }
+
+  createClueAnimation() {
+    if (this.anims.exists('clue-fire-loop')) return;
+    const texture = this.textures.get('clue-fire');
+    const total = texture ? texture.frameTotal : 0;
+    if (!total) return;
+
+    this.anims.create({
+      key: 'clue-fire-loop',
+      frames: this.anims.generateFrameNumbers('clue-fire', { start: 0, end: total - 1 }),
+      frameRate: 12,
+      repeat: -1
+    });
+  }
+
+  loadCluesData() {
+    fetch('clues.json')
+      .then((res) => res.json())
+      .then((data) => {
+        this.cluesData = data.locations || [];
+        this.placeClues();
+      })
+      .catch((error) => {
+        console.error('Failed to load clues.json', error);
+      });
+  }
+
+  placeClues() {
+    if (!this.cluesData || !Array.isArray(this.cluesData)) return;
+
+    const cluesPerArea = 3;
+    this.cluesData.forEach((location) => {
+      const areaIndex = this.areaNames.indexOf(location.name);
+      if (areaIndex === -1) return;
+      const placements = this.getCluePositionsForArea(areaIndex, Math.min(cluesPerArea, location.clues.length));
+
+      placements.forEach((pos, idx) => {
+        const clueInfo = location.clues[idx];
+        if (!clueInfo) return;
+        const sprite = this.createClueSprite(pos.x, pos.y, {
+          area: location.name,
+          beast: location.beast,
+          text: clueInfo.clue
+        });
+        this.clueSprites.push(sprite);
+      });
+    });
+  }
+
+  getCluePositionsForArea(areaIndex, count) {
+    const positions = [];
+    const col = areaIndex % this.gridCols;
+    const row = Math.floor(areaIndex / this.gridCols);
+    const areaPixelX = col * this.areaWidth * this.tileSize;
+    const areaPixelY = row * this.areaHeight * this.tileSize;
+    const areaPixelWidth = this.areaWidth * this.tileSize;
+    const areaPixelHeight = this.areaHeight * this.tileSize;
+    const padding = this.tileSize * 2;
+
+    for (let i = 0; i < count; i++) {
+      const x = Phaser.Math.Between(areaPixelX + padding, areaPixelX + areaPixelWidth - padding);
+      const y = Phaser.Math.Between(areaPixelY + padding, areaPixelY + areaPixelHeight - padding);
+      positions.push({ x, y });
+    }
+
+    return positions;
+  }
+
+  createClueSprite(x, y, clueInfo) {
+    const sprite = this.physics.add.sprite(x, y, 'clue-fire', 0);
+    sprite.setScale(1.4);
+    sprite.body.setImmovable(true);
+    sprite.body.setAllowGravity(false);
+    sprite.clueInfo = clueInfo;
+    sprite.collected = false;
+    sprite.setInteractive({ useHandCursor: true });
+    sprite.on('pointerdown', () => this.handleClueClick(sprite));
+    if (this.anims.exists('clue-fire-loop')) {
+      sprite.anims.play('clue-fire-loop');
+    }
+    this.clueGroup.add(sprite);
+    return sprite;
+  }
+
+  handleClueClick(sprite) {
+    if (!this.inputEnabled || !sprite || sprite.collected) return;
+    const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y);
+    if (dist > 80) {
+      this.showClueToast('Get closer to inspect the clue', true);
+      return;
+    }
+    sprite.collected = true;
+    sprite.disableInteractive();
+    sprite.setAlpha(0.65);
+    this.recordClue(sprite.clueInfo);
+  }
+
+  recordClue(clueInfo) {
+    if (!clueInfo) return;
+    if (this.discoveredClues.find((entry) => entry.text === clueInfo.text)) {
+      this.showClueToast('Clue already recorded', true);
+      return;
+    }
+
+    const entry = {
+      area: clueInfo.area,
+      beast: clueInfo.beast,
+      text: clueInfo.text,
+      timestamp: new Date().toISOString()
+    };
+
+    this.discoveredClues.push(entry);
+    this.updateMemoryBookUI();
+    this.showClueToast('Clue recorded in Memory Book');
+    this.logClueToBackend(entry);
+  }
+
+  logClueToBackend(entry) {
+    const payload = { ...entry };
+    fetch('http://localhost:5001/api/clues/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch((error) => {
+      console.warn('Failed to save clue to backend:', error);
+    });
+  }
+
+  initializeMemoryBookUI() {
+    this.memoryBookOverlay = document.getElementById('memory-book');
+    this.memoryBookList = document.getElementById('memory-book-list');
+    this.memoryBookEmpty = document.getElementById('memory-book-empty');
+    this.memoryBookCloseBtn = document.getElementById('close-memory-book');
+    this.clueToast = document.getElementById('clue-toast');
+
+    if (this.memoryBookCloseBtn) {
+      this.memoryBookCloseBtn.addEventListener('click', () => this.closeMemoryBook());
+    }
+
+    this.memoryBookEscHandler = (e) => {
+      if (e.key === 'Escape' && this.memoryBookOverlay && !this.memoryBookOverlay.classList.contains('hidden')) {
+        this.closeMemoryBook();
+      }
+    };
+    document.addEventListener('keydown', this.memoryBookEscHandler);
+
+    this.updateMemoryBookUI();
+  }
+
+  updateMemoryBookUI() {
+    if (!this.memoryBookOverlay) return;
+    if (!this.discoveredClues || this.discoveredClues.length === 0) {
+      if (this.memoryBookEmpty) this.memoryBookEmpty.classList.remove('hidden');
+      if (this.memoryBookList) this.memoryBookList.innerHTML = '';
+      return;
+    }
+
+    if (this.memoryBookEmpty) this.memoryBookEmpty.classList.add('hidden');
+    if (!this.memoryBookList) return;
+
+    this.memoryBookList.innerHTML = '';
+    this.discoveredClues.forEach((entry, index) => {
+      const clueDiv = document.createElement('div');
+      clueDiv.className = 'memory-clue';
+
+      const title = document.createElement('div');
+      title.className = 'memory-clue-area';
+      title.textContent = `${entry.area} — ${entry.beast}`;
+
+      const text = document.createElement('p');
+      text.textContent = entry.text;
+
+      clueDiv.appendChild(title);
+      clueDiv.appendChild(text);
+      this.memoryBookList.appendChild(clueDiv);
+    });
+  }
+
+  openMemoryBook() {
+    if (!this.memoryBookOverlay) return;
+    this.updateMemoryBookUI();
+    this.memoryBookOverlay.classList.remove('hidden');
+    this.disableInput();
+  }
+
+  closeMemoryBook() {
+    if (!this.memoryBookOverlay) return;
+    this.memoryBookOverlay.classList.add('hidden');
+    this.enableInput();
+  }
+
+  showClueToast(message, isWarning = false) {
+    if (!this.clueToast) return;
+    this.clueToast.textContent = message;
+    this.clueToast.style.borderColor = isWarning ? 'rgba(255, 120, 120, 0.8)' : 'rgba(255, 215, 0, 0.6)';
+    this.clueToast.classList.remove('hidden');
+
+    if (this.clueToastTimeout) {
+      clearTimeout(this.clueToastTimeout);
+    }
+    this.clueToastTimeout = setTimeout(() => {
+      this.clueToast.classList.add('hidden');
+    }, 2000);
   }
 
   startIntroSequence() {
