@@ -29,9 +29,15 @@ export default class ShrineScene extends Phaser.Scene {
     this.load.image('baize', 'images/Baize.png');
     this.load.image('jiuweihu', 'images/jiuweihu.png');
 
-    // Load cat animations
-    this.load.image('cat-idle', 'images/Cat-5/Cat-5-Idle.png');
-    this.load.image('cat-walk', 'images/Cat-5/Cat-5-Walk.png');
+    // Load cat animations (spritesheets trim to single frame 50x50)
+    this.load.spritesheet('cat-idle', 'images/Cat-5/Cat-5-Idle.png', {
+      frameWidth: 50,
+      frameHeight: 50
+    });
+    this.load.spritesheet('cat-walk', 'images/Cat-5/Cat-5-Walk.png', {
+      frameWidth: 50,
+      frameHeight: 50
+    });
     this.load.image('cat-sitting', 'images/Cat-5/Cat-5-Sitting.png');
 
     // Load monster images for 8 areas
@@ -206,23 +212,27 @@ export default class ShrineScene extends Phaser.Scene {
     const catX = (startAreaCol * this.areaWidth + this.areaWidth / 2) * this.tileSize;
     const catY = (startAreaRow * this.areaHeight + this.areaHeight / 2) * this.tileSize;
 
-    this.cat = this.add.sprite(catX, catY, 'cat-sitting');
-    this.cat.setScale(1);
+    this.cat = this.add.sprite(catX, catY, 'cat-idle', 0);
+    this.cat.setScale(0.9);
     this.physics.add.existing(this.cat);
     this.cat.body.setCollideWorldBounds(true);
     this.cat.npcId = 'baize';
     this.cat.npcName = 'Baize';
 
-    // Cat animation
+    // Cat animations
     this.anims.create({
       key: 'cat-walk-anim',
-      frames: [
-        { key: 'cat-walk' },
-        { key: 'cat-idle' }
-      ],
+      frames: this.anims.generateFrameNumbers('cat-walk', { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+    this.anims.create({
+      key: 'cat-idle-anim',
+      frames: this.anims.generateFrameNumbers('cat-idle', { start: 0, end: 9 }),
       frameRate: 6,
       repeat: -1
     });
+    this.cat.anims.play('cat-idle-anim');
 
     // Monster data for 8 areas
     const monsters = [
@@ -313,7 +323,7 @@ export default class ShrineScene extends Phaser.Scene {
       return;
     }
 
-    const speed = 80;
+    const speed = 150;
     this.player.body.setVelocity(0);
 
     // Player movement
@@ -366,7 +376,7 @@ export default class ShrineScene extends Phaser.Scene {
       this.cat.anims.play('cat-walk-anim', true);
     } else {
       this.cat.body.setVelocity(0);
-      this.cat.setTexture('cat-sitting');
+      this.cat.anims.play('cat-idle-anim', true);
     }
   }
 
