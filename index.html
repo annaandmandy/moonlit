@@ -79,6 +79,52 @@
     </div>
   </div>
 
+  <!-- Tribunal Overlay -->
+  <div id="tribunal-overlay" class="hidden">
+    <div class="tribunal-panel">
+      <div class="tribunal-body">
+        <div class="tribunal-clues">
+          <div class="tribunal-clues-header">
+            <h3>Clue Board</h3>
+            <span id="tribunal-clue-count"></span>
+          </div>
+          <ul id="tribunal-clue-list"></ul>
+        </div>
+        <div class="tribunal-main">
+          <div class="tribunal-title-row">
+            <div>
+              <div class="tribunal-title">Moonlit Tribunal</div>
+              <div id="tribunal-scene-title">Council Hall</div>
+            </div>
+            <button id="tribunal-close">×</button>
+          </div>
+          <div class="tribunal-history-panel">
+            <div id="tribunal-log"></div>
+          </div>
+          <div class="tribunal-highlight">
+            <img id="tribunal-portrait" src="" alt="" />
+            <div class="tribunal-highlight-text">
+              <div id="tribunal-speaker-name">Baize</div>
+              <div id="tribunal-latest-text">Awaiting testimony...</div>
+            </div>
+          </div>
+          <div class="tribunal-controls">
+            <div class="tribunal-actions">
+              <button class="tribunal-action" data-action="auto">Auto</button>
+              <button class="tribunal-action" data-action="choose">Select Speaker</button>
+              <button class="tribunal-action primary" data-action="player">Object!</button>
+              <select id="tribunal-speaker-select"></select>
+            </div>
+            <div class="tribunal-input-row">
+              <textarea id="tribunal-input" placeholder="Press Object! to speak..."></textarea>
+              <button id="tribunal-submit">Speak</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Intro Overlay -->
   <div id="intro-overlay" class="hidden">
     <div class="intro-content">

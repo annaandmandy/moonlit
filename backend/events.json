@@ -5,10 +5,10 @@
         "description": "The priest of Qingqiu, Aqi, was killed. The corpse was **bloodless**, with a **broken head**, leaving a **snake-like mark**.",
         "map": "Cyan Hill Village",
         "time": "Eclipse Festival",
-        "npcs": ["jiuweihu", "yingzhao", "kui", "bifang", "xingxing", "qiongqi", "qingniao"],
+        "npcs": ["jiuweihu", "yingzhao", "kui", "bifang", "xingxing", "qiongqi", "qingniao", "xiangliu"],
         "killing_time": "Nov 1st, 19:00",
         "p_clues": [
-            discovered_clues.json
+            "discovered_clues.json"
         ],
         "truth": "The murderer was actually a nine-tailed fox. She used the \"poison Gas of Xiangliu Seal\" to disguise herself as a \"snake killing\" scene. Motive: Priest Aqi discovered that she was intermarrying with humans in her human form, violating the precepts of Qingqiu. She used illusions to guide Yingzhao to see the \"snake shadow\" and manipulated 狌狌 to spread panic. Her original intention was not to kill but to \"seize his heart to break the seal\", but the ritual backfired. The real \"poisonous gas\" originated from the remaining Xiangliu Nianling beneath the altar.",
         "killers": ["jiuweihu"],

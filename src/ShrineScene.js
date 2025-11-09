@@ -1,3 +1,5 @@
+import { tribunalUI } from './ui/tribunal.js';
+
 export default class ShrineScene extends Phaser.Scene {
   constructor() {
     super({ key: 'ShrineScene' });
@@ -18,6 +20,7 @@ export default class ShrineScene extends Phaser.Scene {
     this.sceneConfigs = {};
     this.preloadedClues = [];
     this.preloadedClueData = null;
+    this.tribunalUI = tribunalUI;
   }
 
   init(data) {
@@ -175,7 +178,8 @@ export default class ShrineScene extends Phaser.Scene {
           { npcId: 'yingzhao', npcName: 'Yingzhao', texture: 'yingzhao', areaIndex: 0, tileX: 4, tileY: 10, scale: 0.13 },
           { npcId: 'jiuweihu', npcName: 'Nine-Tail Fox', texture: 'jiuweihu', areaIndex: 0, tileX: 20, tileY: 10, scale: 0.13 }
         ],
-        showGridTiles: false
+        showGridTiles: false,
+        tribunalEventId: 'event_1'
       }
     };
   }
@@ -236,7 +240,7 @@ export default class ShrineScene extends Phaser.Scene {
     this.initializeMemoryBookUI();
     this.initializeSceneSwitcherUI();
     this.createClueAnimation();
-    this.loadCluesData();
+    this.resetCluesLogIfNeeded().finally(() => this.loadCluesData());
 
     // Story intro
     this.startIntroSequence();
@@ -462,7 +466,8 @@ export default class ShrineScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
       interact: Phaser.Input.Keyboard.KeyCodes.E,
       catInteract: Phaser.Input.Keyboard.KeyCodes.V,
-      map: Phaser.Input.Keyboard.KeyCodes.M
+      map: Phaser.Input.Keyboard.KeyCodes.M,
+      trial: Phaser.Input.Keyboard.KeyCodes.J
     });
 
     // Collision
@@ -521,6 +526,10 @@ export default class ShrineScene extends Phaser.Scene {
     // Toggle map with M key
     if (Phaser.Input.Keyboard.JustDown(this.wasd.map)) {
       this.toggleMap();
+    }
+
+    if (this.currentSceneKey === 'councilChamber' && Phaser.Input.Keyboard.JustDown(this.wasd.trial)) {
+      this.openTribunalDebate();
     }
   }
 
@@ -1014,7 +1023,7 @@ export default class ShrineScene extends Phaser.Scene {
 
     Promise.all([basePromise, crimePromise]).then(([baseData, crimeData]) => {
       const baseLocations = baseData?.locations || [];
-      const merged = this.mergeCrimeSceneClues(baseLocations, crimeData);
+      const merged = this.mergeCrimeSceneClues(baseLocations, crimeData || []);
       this.cluesData = merged;
       this.preloadedClueData = merged;
       window.__GLOBAL_CLUE_DATA = merged;
@@ -1252,6 +1261,21 @@ export default class ShrineScene extends Phaser.Scene {
     }, 2000);
   }
 
+  openTribunalDebate() {
+    if (!this.tribunalUI) return;
+    if (this.tribunalUI.isOpen) return;
+    const eventId = this.currentSceneConfig?.tribunalEventId || 'event_1';
+    this.disableInput();
+    const openPromise = this.tribunalUI.open(eventId, {
+      onClose: () => {
+        this.enableInput();
+      }
+    });
+    if (openPromise && typeof openPromise.catch === 'function') {
+      openPromise.catch(() => this.enableInput());
+    }
+  }
+
   handleCorpseClick() {
     if (!this.corpseSprite || !this.corpseClueInfo) {
       this.showClueToast('Nothing else to inspect here', true);
@@ -1263,6 +1287,23 @@ export default class ShrineScene extends Phaser.Scene {
       return;
     }
     this.recordClue(this.corpseClueInfo);
+  }
+
+  resetCluesLogIfNeeded() {
+    if (window.__CLUES_RESET_DONE) {
+      return Promise.resolve();
+    }
+    window.__CLUES_RESET_DONE = true;
+    window.__GLOBAL_DISCOVERED_CLUES = [];
+    window.__GLOBAL_CLUE_DATA = null;
+    this.discoveredClues = [];
+    this.updateMemoryBookUI();
+
+    return fetch('http://localhost:5001/api/clues/reset', {
+      method: 'POST'
+    }).catch((err) => {
+      console.warn('Failed to reset clues log', err);
+    });
   }
 
   initializeSceneSwitcherUI() {
@@ -1365,7 +1406,7 @@ export default class ShrineScene extends Phaser.Scene {
 
     if (!crimeData) return mergedLocations;
 
-    const crimeEntries = Array.isArray(crimeData) ? crimeData : [crimeData];
+    const crimeEntries = Array.isArray(crimeData) ? crimeData : (crimeData ? [crimeData] : []);
 
     crimeEntries.forEach((entry) => {
       if (!entry || !entry.location || !entry.clues) return;
