@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Eclipse Trial</title>
+  <link rel="stylesheet" href="src/ui/ui.css">
+  <script src="node_modules/phaser/dist/phaser.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #0a0015;
+    }
+    #game-container {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <!-- Dialogue Overlay -->
+  <div id="dialogue-box" class="hidden">
+    <div class="dialogue-header">
+      <span id="npc-name"></span>
+      <button id="close-dialogue">×</button>
+    </div>
+    <div class="dialogue-content">
+      <div class="dialogue-main">
+        <img id="npc-portrait" src="" alt="" class="npc-portrait">
+        <div class="dialogue-text">
+          <div id="chat-history"></div>
+          <textarea id="player-input" placeholder="Type your message..."></textarea>
+          <div class="dialogue-hint">Press Enter to send, Esc to close</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cat Action Menu -->
+  <div id="cat-action-menu" class="hidden">
+    <div class="action-menu-content">
+      <h2>Cat Actions</h2>
+      <button id="action-memory-book" class="action-button">Memory Book</button>
+      <button id="action-talk" class="action-button">Talk</button>
+      <button id="action-settings" class="action-button">Settings</button>
+      <p class="action-hint">Press ESC to close</p>
+    </div>
+  </div>
+
+  <!-- Intro Overlay -->
+  <div id="intro-overlay" class="hidden">
+    <div class="intro-content">
+      <h2>The Blood Moon Inquiry</h2>
+      <p>
+        The Moonlit Shrine is sealed for investigation. A divine figure was slain upon the altar,
+        and the ritual grounds now ripple with unrest. You were summoned to uncover the truth before
+        the crimson eclipse fades.
+      </p>
+      <p>
+        Baize, your feline companion, has walked these lands for centuries. He keeps a living catalog
+        of every creature that prowls the shrine and will serve as your guide through this mystery.
+      </p>
+      <div class="intro-baize-callout">
+        <strong>Baize:</strong> "I've memorized the traits of each monster here—think of me as your walking
+        encyclopedia. Stick with me and I'll share whatever lore you need while we investigate."
+      </div>
+      <button id="intro-begin">Begin Investigation</button>
+    </div>
+  </div>
+
+  <style>
+    #cat-action-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+    }
+
+    #cat-action-menu.hidden {
+      display: none;
+    }
+
+    .action-menu-content {
+      background-color: #2c3e50;
+      border: 3px solid #ffffff;
+      border-radius: 10px;
+      padding: 30px;
+      min-width: 300px;
+      text-align: center;
+    }
+
+    .action-menu-content h2 {
+      color: #ffffff;
+      margin: 0 0 20px 0;
+      font-size: 24px;
+    }
+
+    .action-button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      background-color: #3498db;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      border-radius: 5px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .action-button:hover {
+      background-color: #2980b9;
+    }
+
+    .action-hint {
+      color: #cccccc;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+  </style>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
