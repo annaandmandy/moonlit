@@ -1,6 +1,15 @@
 {
   "locations": [
     {
+      "name": "Qingqiu Village",
+      "beast": "Unknown Serpent Shade",
+      "clues": [
+        { "clue": "Blue phosphorescent residue still glows on the ritual stone, pulsing whenever the wind shifts toward the east." },
+        { "clue": "Broken feathers and claw prints cover the courtyard, but each track points a different direction—as if multiple attackers collided." },
+        { "clue": "A witness swore a shadow with many heads slithered away, leaving a serpent-shaped scorch mark beside the corpse." }
+      ]
+    },
+    {
       "name": "Entrance Hall",
       "beast": "Bifang",
       "clues": [

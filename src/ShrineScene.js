@@ -14,6 +14,16 @@ export default class ShrineScene extends Phaser.Scene {
     this.worldWidth = 0;
     this.worldHeight = 0;
     this.lastNPC = null;
+    this.currentSceneKey = null;
+    this.sceneConfigs = {};
+    this.preloadedClues = [];
+    this.preloadedClueData = null;
+  }
+
+  init(data) {
+    this.pendingSceneKey = data?.targetScene;
+    this.preloadedClues = data?.discoveredClues || window.__GLOBAL_DISCOVERED_CLUES || [];
+    this.preloadedClueData = data?.allCluesData || window.__GLOBAL_CLUE_DATA || null;
   }
 
   preload() {
@@ -43,6 +53,7 @@ export default class ShrineScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32
     });
+    this.load.image('corpse', 'images/corpse.png');
 
     // Load monster images for 8 areas
     this.load.image('bifang', 'images/bifang.png');
@@ -54,16 +65,139 @@ export default class ShrineScene extends Phaser.Scene {
     this.load.image('yingzhao', 'images/yingzhao.png');
   }
 
-  create() {
-    // 8-area grid map (4 columns x 2 rows)
-    this.gridCols = 4;
-    this.gridRows = 2;
-    this.areaWidth = 28; // tiles per area width (smaller tiles, more detail)
-    this.areaHeight = 20; // tiles per area height
+  setupSceneConfigs() {
+    this.sceneConfigs = {
+      qingqiuVillage: {
+        key: 'qingqiuVillage',
+        displayName: 'Qingqiu Village (Crime Scene)',
+        summary: 'Investigate Aqi’s bloodless death beneath the eclipse.',
+        gridCols: 2,
+        gridRows: 1,
+        areaWidth: 24,
+        areaHeight: 18,
+        tileSize: 24,
+        areaNames: ['Qingqiu Village', 'Eastern Path'],
+        areaColors: [0x1b1f34, 0x101524],
+        backgroundColor: '#050712',
+        cameraZoom: 3.8,
+        playerStart: { areaIndex: 0, tileX: 10, tileY: 9 },
+        catStart: { areaIndex: 0, tileX: 8, tileY: 11 },
+        clueAreas: ['Qingqiu Village'],
+        clueSpawns: {
+          'Qingqiu Village': [
+            { areaIndex: 0, tileX: 12, tileY: 8 },
+            { areaIndex: 0, tileX: 7, tileY: 12 },
+            { areaIndex: 0, tileX: 16, tileY: 10 }
+          ]
+        },
+        corpse: {
+          texture: 'corpse',
+          areaIndex: 0,
+          tileX: 11,
+          tileY: 9,
+          scale: 0.4
+        },
+        ambientFog: 0x050607,
+        spawnMonsters: false
+      },
+      shrineGrounds: {
+        key: 'shrineGrounds',
+        displayName: 'Moonlit Shrine Grounds',
+        summary: 'Explore the eight sanctums of the Moon Eclipse Trial.',
+        gridCols: 4,
+        gridRows: 2,
+        areaWidth: 28,
+        areaHeight: 20,
+        tileSize: 24,
+        areaNames: [
+          'Entrance Hall',
+          'Forest Shrine',
+          'Spirit Garden',
+          'Blood Altar',
+          'Water Temple',
+          'Ancient Library',
+          'Mountain Pass',
+          'Moonlit Summit'
+        ],
+        areaColors: [
+          0xFF6B9D,
+          0x4ECDC4,
+          0xFFE66D,
+          0xA8E6CF,
+          0xFF8B94,
+          0xB4A7D6,
+          0xFDCB82,
+          0x95E1D3
+        ],
+        backgroundColor: '#0a0015',
+        cameraZoom: 2.5,
+        playerStart: { areaIndex: 0, tileX: 14, tileY: 10 },
+        catStart: { areaIndex: 0, tileX: 12, tileY: 10 },
+        clueAreas: [
+          'Entrance Hall',
+          'Forest Shrine',
+          'Spirit Garden',
+          'Blood Altar',
+          'Water Temple',
+          'Ancient Library',
+          'Mountain Pass',
+          'Moonlit Summit'
+        ],
+        spawnMonsters: true
+      },
+      councilChamber: {
+        key: 'councilChamber',
+        displayName: 'Moonlit Tribunal',
+        summary: 'Convene every eyewitness and spirit to debate the culprit.',
+        gridCols: 1,
+        gridRows: 1,
+        areaWidth: 24,
+        areaHeight: 18,
+        tileSize: 24,
+        areaNames: ['Council Hall'],
+        areaColors: [0x1f1230],
+        backgroundColor: '#150820',
+        cameraZoom: 3.2,
+        playerStart: { areaIndex: 0, tileX: 12, tileY: 10 },
+        catStart: { areaIndex: 0, tileX: 10, tileY: 11 },
+        clueAreas: [],
+        spawnMonsters: false,
+        extraNPCs: [
+          { npcId: 'bifang', npcName: 'Bifang', texture: 'bifang', areaIndex: 0, tileX: 6, tileY: 8, scale: 0.13 },
+          { npcId: 'kui', npcName: 'Kui', texture: 'kui', areaIndex: 0, tileX: 18, tileY: 8, scale: 0.13 },
+          { npcId: 'qingniao', npcName: 'Qingniao', texture: 'qingniao', areaIndex: 0, tileX: 6, tileY: 13, scale: 0.13 },
+          { npcId: 'qiongqi', npcName: 'Qiongqi', texture: 'qiongqi', areaIndex: 0, tileX: 18, tileY: 13, scale: 0.13 },
+          { npcId: 'xiangliu', npcName: 'Xiangliu', texture: 'xiangliu', areaIndex: 0, tileX: 12, tileY: 6, scale: 0.14 },
+          { npcId: 'xingxing', npcName: 'Xingxing', texture: 'xingxing', areaIndex: 0, tileX: 12, tileY: 14, scale: 0.13 },
+          { npcId: 'yingzhao', npcName: 'Yingzhao', texture: 'yingzhao', areaIndex: 0, tileX: 4, tileY: 10, scale: 0.13 },
+          { npcId: 'jiuweihu', npcName: 'Nine-Tail Fox', texture: 'jiuweihu', areaIndex: 0, tileX: 20, tileY: 10, scale: 0.13 }
+        ]
+      }
+    };
+  }
+
+  applySceneConfig(key) {
+    this.currentSceneConfig = this.sceneConfigs[key] || this.sceneConfigs.shrineGrounds;
+    this.currentSceneKey = this.currentSceneConfig.key;
+    this.gridCols = this.currentSceneConfig.gridCols;
+    this.gridRows = this.currentSceneConfig.gridRows;
+    this.areaWidth = this.currentSceneConfig.areaWidth;
+    this.areaHeight = this.currentSceneConfig.areaHeight;
+    this.tileSize = this.currentSceneConfig.tileSize || 24;
     this.gridWidth = this.gridCols * this.areaWidth;
     this.gridHeight = this.gridRows * this.areaHeight;
-    this.tileSize = 24;
+    this.areaNames = [...this.currentSceneConfig.areaNames];
+    this.areaColors = [...this.currentSceneConfig.areaColors];
+    if (this.cameras && this.cameras.main) {
+      this.cameras.main.setBackgroundColor(this.currentSceneConfig.backgroundColor || '#0a0015');
+    }
+  }
+
+  create() {
     this.inputEnabled = true;
+    this.setupSceneConfigs();
+    const initialKey = this.pendingSceneKey || 'qingqiuVillage';
+    this.applySceneConfig(initialKey);
     this.worldWidth = this.gridWidth * this.tileSize;
     this.worldHeight = this.gridHeight * this.tileSize;
 
@@ -79,7 +213,7 @@ export default class ShrineScene extends Phaser.Scene {
     // Clue tracking structures
     this.clueGroup = this.physics.add.group({ immovable: true, allowGravity: false });
     this.clueSprites = [];
-    this.discoveredClues = [];
+    this.discoveredClues = this.preloadedClues ? [...this.preloadedClues] : [];
 
     // Ensure physics world matches full grid so players can reach every area
     this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
@@ -87,19 +221,32 @@ export default class ShrineScene extends Phaser.Scene {
     // Setup camera - zoom in and follow player
     this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(4.2);
+    this.cameras.main.setZoom(this.currentSceneConfig.cameraZoom || 4.2);
 
     // Setup controls
     this.setupControls();
-    this.physics.add.collider(this.player, this.clueGroup);
-    this.physics.add.collider(this.cat, this.clueGroup);
+    this.physics.add.overlap(this.player, this.clueGroup);
+    this.physics.add.overlap(this.cat, this.clueGroup);
 
     this.initializeMemoryBookUI();
+    this.initializeSceneSwitcherUI();
     this.createClueAnimation();
     this.loadCluesData();
 
     // Story intro
     this.startIntroSequence();
+
+    this.events.once('shutdown', () => {
+      if (this.memoryBookEscHandler) {
+        document.removeEventListener('keydown', this.memoryBookEscHandler);
+      }
+      if (this.sceneSwitcherEscHandler) {
+        document.removeEventListener('keydown', this.sceneSwitcherEscHandler);
+      }
+      if (this.actionMenuEscHandler) {
+        document.removeEventListener('keydown', this.actionMenuEscHandler);
+      }
+    });
   }
 
   createMap() {
@@ -148,31 +295,24 @@ export default class ShrineScene extends Phaser.Scene {
   }
 
   getAreaColor(areaIndex) {
-    const colors = [
-      0xFF6B9D,  // Pink - Area 1
-      0x4ECDC4,  // Teal - Area 2
-      0xFFE66D,  // Yellow - Area 3
-      0xA8E6CF,  // Mint green - Area 4
-      0xFF8B94,  // Coral - Area 5
-      0xB4A7D6,  // Lavender - Area 6
-      0xFDCB82,  // Peach - Area 7
-      0x95E1D3   // Aqua - Area 8
-    ];
-    return colors[areaIndex] || 0x2c3e50;
+    return this.areaColors[areaIndex] !== undefined ? this.areaColors[areaIndex] : 0x2c3e50;
   }
 
   createPlayer() {
-    // Create player sprite - start in first area (pink area)
-    const startX = (this.areaWidth / 2 + 2) * this.tileSize; // Slightly offset from center
-    const startY = (this.areaHeight / 2) * this.tileSize;
+    const start = this.resolvePosition(this.currentSceneConfig.playerStart, {
+      areaIndex: 0,
+      tileX: this.areaWidth / 2,
+      tileY: this.areaHeight / 2
+    });
 
-    this.player = this.add.sprite(startX, startY, 'player-down-1');
-    this.player.setScale(2);
+    this.player = this.add.sprite(start.x, start.y, 'player-down-1');
+    const playerScale = this.currentSceneConfig.playerScale || 1;
+    this.player.setScale(playerScale);
     this.physics.add.existing(this.player);
     this.player.body.setCollideWorldBounds(true);
     // Tighten collision bounds to match smaller tiles
-    this.player.body.setSize(this.player.width * 0.35, this.player.height * 0.55);
-    this.player.body.setOffset(this.player.width * 0.15, this.player.height * 0.2);
+    this.player.body.setSize(this.player.width * playerScale * 0.7, this.player.height * playerScale * 0.9);
+    this.player.body.setOffset(this.player.width * (playerScale * 0.4), this.player.height * (playerScale * 0.2));
 
     // Create player animations
     this.anims.create({
@@ -221,13 +361,13 @@ export default class ShrineScene extends Phaser.Scene {
   }
 
   createNPCs() {
-    // Cat companion (Baize in disguise) - starts in center of first area
-    const startAreaCol = 0;
-    const startAreaRow = 0;
-    const catX = (startAreaCol * this.areaWidth + this.areaWidth / 2) * this.tileSize;
-    const catY = (startAreaRow * this.areaHeight + this.areaHeight / 2) * this.tileSize;
+    const catStart = this.resolvePosition(this.currentSceneConfig.catStart, {
+      areaIndex: 0,
+      tileX: this.areaWidth / 2 - 2,
+      tileY: this.areaHeight / 2
+    });
 
-    this.cat = this.add.sprite(catX, catY, 'cat-idle', 0);
+    this.cat = this.add.sprite(catStart.x, catStart.y, 'cat-idle', 0);
     this.cat.setScale(0.9);
     this.physics.add.existing(this.cat);
     this.cat.body.setCollideWorldBounds(true);
@@ -249,7 +389,6 @@ export default class ShrineScene extends Phaser.Scene {
     });
     this.cat.anims.play('cat-idle-anim');
 
-    // Monster data for 8 areas
     const monsters = [
       { key: 'bifang', name: 'Bifang', id: 'bifang' },
       { key: 'kui', name: 'Kui', id: 'kui' },
@@ -261,38 +400,53 @@ export default class ShrineScene extends Phaser.Scene {
       { key: 'jiuweihu', name: 'Nine-Tail Fox', id: 'jiuweihu' }
     ];
 
-    // Place one monster in each area
     this.npcs = [this.cat];
     this.monsters = [];
 
-    for (let row = 0; row < this.gridRows; row++) {
-      for (let col = 0; col < this.gridCols; col++) {
-        const areaIndex = row * this.gridCols + col;
-        const monster = monsters[areaIndex];
+    if (this.currentSceneConfig.spawnMonsters !== false) {
+      for (let row = 0; row < this.gridRows; row++) {
+        for (let col = 0; col < this.gridCols; col++) {
+          const areaIndex = row * this.gridCols + col;
+          const monster = monsters[areaIndex];
+          if (!monster) continue;
 
-        // Calculate center position of this area
-        const centerX = (col * this.areaWidth + this.areaWidth / 2) * this.tileSize;
-        const centerY = (row * this.areaHeight + this.areaHeight / 2) * this.tileSize;
+          const centerX = (col * this.areaWidth + this.areaWidth / 2) * this.tileSize;
+          const centerY = (row * this.areaHeight + this.areaHeight / 2) * this.tileSize;
+          const monsterSprite = this.add.sprite(centerX, centerY, monster.key);
+          monsterSprite.setDisplaySize(120, 120);
 
-        // Create monster sprite at the area's center
-        const monsterSprite = this.add.sprite(centerX, centerY, monster.key);
+          this.physics.add.existing(monsterSprite);
+          monsterSprite.body.setImmovable(false);
+          monsterSprite.body.setCollideWorldBounds(false);
 
-        // Set display size around 1 tile
-        monsterSprite.setDisplaySize(150, 150);
+          monsterSprite.npcId = monster.id;
+          monsterSprite.npcName = monster.name;
 
-        this.physics.add.existing(monsterSprite);
-        // Don't make monsters immovable - they shouldn't block player movement
-        monsterSprite.body.setImmovable(false);
-        // Disable collision for monsters so players can walk through them
-        monsterSprite.body.setCollideWorldBounds(false);
-
-        monsterSprite.npcId = monster.id;
-        monsterSprite.npcName = monster.name;
-
-        this.npcs.push(monsterSprite);
-        this.monsters.push(monsterSprite);
+          this.npcs.push(monsterSprite);
+          this.monsters.push(monsterSprite);
+        }
       }
     }
+
+    if (Array.isArray(this.currentSceneConfig.extraNPCs)) {
+      this.currentSceneConfig.extraNPCs.forEach((npc) => {
+        const pos = this.resolvePosition(npc, {
+          areaIndex: npc.areaIndex || 0,
+          tileX: npc.tileX || this.areaWidth / 2,
+          tileY: npc.tileY || this.areaHeight / 2
+        });
+        const sprite = this.add.sprite(pos.x, pos.y, npc.texture || npc.npcId);
+        sprite.setScale(npc.scale || 0.2);
+        this.physics.add.existing(sprite);
+        sprite.body.setImmovable(true);
+        sprite.body.setCollideWorldBounds(false);
+        sprite.npcId = npc.npcId || npc.texture;
+        sprite.npcName = npc.npcName || npc.texture;
+        this.npcs.push(sprite);
+      });
+    }
+
+    this.createCorpse();
   }
 
   setupControls() {
@@ -317,17 +471,6 @@ export default class ShrineScene extends Phaser.Scene {
     // Map toggle state
     this.mapVisible = false;
 
-    // 8-area map colors (4x2 grid)
-    this.areaColors = [
-      0xFF6B9D,  // Pink - Area 1
-      0x4ECDC4,  // Teal - Area 2
-      0xFFE66D,  // Yellow - Area 3
-      0xA8E6CF,  // Mint green - Area 4
-      0xFF8B94,  // Coral - Area 5
-      0xB4A7D6,  // Lavender - Area 6
-      0xFDCB82,  // Peach - Area 7
-      0x95E1D3   // Aqua - Area 8
-    ];
   }
 
   update() {
@@ -551,8 +694,7 @@ export default class ShrineScene extends Phaser.Scene {
     } else if (choice === 'Memory Book') {
       this.openMemoryBook();
     } else if (choice === 'Settings') {
-      // TODO: Implement settings
-      console.log('Settings clicked');
+      this.openSceneSwitcher();
     }
   }
 
@@ -820,6 +962,19 @@ export default class ShrineScene extends Phaser.Scene {
     }
   }
 
+  createCorpse() {
+    if (!this.currentSceneConfig.corpse) return;
+    const corpseData = this.currentSceneConfig.corpse;
+    const pos = this.resolvePosition(corpseData, {
+      areaIndex: corpseData.areaIndex || 0,
+      tileX: corpseData.tileX || this.areaWidth / 2,
+      tileY: corpseData.tileY || this.areaHeight / 2
+    });
+    this.corpseSprite = this.add.image(pos.x, pos.y, corpseData.texture || 'corpse');
+    this.corpseSprite.setScale(corpseData.scale || 0.6);
+    this.corpseSprite.setDepth(2);
+  }
+
   createClueAnimation() {
     if (this.anims.exists('clue-fire-loop')) return;
     const texture = this.textures.get('clue-fire');
@@ -835,10 +990,18 @@ export default class ShrineScene extends Phaser.Scene {
   }
 
   loadCluesData() {
+    if (this.preloadedClueData) {
+      this.cluesData = this.preloadedClueData;
+      this.placeClues();
+      return;
+    }
+
     fetch('clues.json')
       .then((res) => res.json())
       .then((data) => {
         this.cluesData = data.locations || [];
+        this.preloadedClueData = this.cluesData;
+        window.__GLOBAL_CLUE_DATA = this.cluesData;
         this.placeClues();
       })
       .catch((error) => {
@@ -849,11 +1012,48 @@ export default class ShrineScene extends Phaser.Scene {
   placeClues() {
     if (!this.cluesData || !Array.isArray(this.cluesData)) return;
 
+    if (this.clueSprites && this.clueSprites.length) {
+      this.clueSprites.forEach((sprite) => sprite.destroy());
+    }
+    if (this.clueGroup) {
+      this.clueGroup.clear(true, true);
+    }
+    this.clueSprites = [];
+
     const cluesPerArea = 3;
+    const allowedAreas = new Set(
+      (this.currentSceneConfig.clueAreas && this.currentSceneConfig.clueAreas.length > 0)
+        ? this.currentSceneConfig.clueAreas
+        : this.areaNames
+    );
+    const spawnOverrides = this.currentSceneConfig.clueSpawns || {};
+
     this.cluesData.forEach((location) => {
       const areaIndex = this.areaNames.indexOf(location.name);
-      if (areaIndex === -1) return;
-      const placements = this.getCluePositionsForArea(areaIndex, Math.min(cluesPerArea, location.clues.length));
+      if (areaIndex === -1 || !allowedAreas.has(location.name)) return;
+      const count = Math.min(cluesPerArea, location.clues.length);
+
+      let placements = [];
+      const overrides = spawnOverrides[location.name];
+      if (overrides && overrides.length) {
+        overrides.slice(0, count).forEach((spawn) => {
+          const worldPos = this.resolvePosition(
+            {
+              areaIndex: spawn.areaIndex ?? areaIndex,
+              tileX: spawn.tileX,
+              tileY: spawn.tileY
+            },
+            {
+              areaIndex,
+              tileX: this.areaWidth / 2,
+              tileY: this.areaHeight / 2
+            }
+          );
+          placements.push(worldPos);
+        });
+      } else {
+        placements = this.getCluePositionsForArea(areaIndex, count);
+      }
 
       placements.forEach((pos, idx) => {
         const clueInfo = location.clues[idx];
@@ -1024,11 +1224,110 @@ export default class ShrineScene extends Phaser.Scene {
     }, 2000);
   }
 
+  initializeSceneSwitcherUI() {
+    this.sceneSwitcherOverlay = document.getElementById('scene-switcher');
+    this.sceneSwitcherList = document.getElementById('scene-switcher-list');
+    this.sceneSwitcherCloseBtn = document.getElementById('close-scene-switcher');
+
+    if (this.sceneSwitcherCloseBtn) {
+      this.sceneSwitcherCloseBtn.addEventListener('click', () => this.closeSceneSwitcher());
+    }
+
+    this.sceneSwitcherEscHandler = (e) => {
+      if (
+        e.key === 'Escape' &&
+        this.sceneSwitcherOverlay &&
+        !this.sceneSwitcherOverlay.classList.contains('hidden')
+      ) {
+        this.closeSceneSwitcher();
+      }
+    };
+    document.addEventListener('keydown', this.sceneSwitcherEscHandler);
+  }
+
+  renderSceneOptions() {
+    if (!this.sceneSwitcherList) return;
+    this.sceneSwitcherList.innerHTML = '';
+    Object.values(this.sceneConfigs).forEach((config) => {
+      const button = document.createElement('button');
+      button.className = 'scene-option';
+      button.textContent = config.displayName;
+      if (config.key === this.currentSceneKey) {
+        button.disabled = true;
+        button.classList.add('active');
+      } else {
+        button.addEventListener('click', () => this.switchScene(config.key));
+      }
+
+      if (config.summary) {
+        const summary = document.createElement('span');
+        summary.textContent = config.summary;
+        button.appendChild(summary);
+      }
+
+      this.sceneSwitcherList.appendChild(button);
+    });
+  }
+
+  openSceneSwitcher() {
+    if (!this.sceneSwitcherOverlay) return;
+    this.renderSceneOptions();
+    this.sceneSwitcherOverlay.classList.remove('hidden');
+    this.disableInput();
+  }
+
+  closeSceneSwitcher(skipEnable = false) {
+    if (!this.sceneSwitcherOverlay) return;
+    this.sceneSwitcherOverlay.classList.add('hidden');
+    if (!skipEnable) {
+      this.enableInput();
+    }
+  }
+
+  switchScene(targetKey) {
+    if (targetKey === this.currentSceneKey) {
+      this.showClueToast('Already investigating here', true);
+      this.closeSceneSwitcher();
+      return;
+    }
+    window.__GLOBAL_DISCOVERED_CLUES = this.discoveredClues;
+    window.__GLOBAL_CLUE_DATA = this.cluesData;
+    this.closeSceneSwitcher(true);
+    this.scene.restart({
+      targetScene: targetKey,
+      discoveredClues: this.discoveredClues,
+      allCluesData: this.cluesData
+    });
+  }
+
+  resolvePosition(configPos, fallback) {
+    const data = configPos || {};
+    const fb = fallback || {};
+    const areaIndex = data.areaIndex ?? fb.areaIndex ?? 0;
+    const tileX = data.tileX ?? fb.tileX ?? this.areaWidth / 2;
+    const tileY = data.tileY ?? fb.tileY ?? this.areaHeight / 2;
+    return this.getWorldPosition(areaIndex, tileX, tileY);
+  }
+
+  getWorldPosition(areaIndex, tileX, tileY) {
+    const col = areaIndex % this.gridCols;
+    const row = Math.floor(areaIndex / this.gridCols);
+    const x = (col * this.areaWidth + tileX) * this.tileSize;
+    const y = (row * this.areaHeight + tileY) * this.tileSize;
+    return { x, y };
+  }
+
   startIntroSequence() {
     const introOverlay = document.getElementById('intro-overlay');
     const beginButton = document.getElementById('intro-begin');
 
     if (!introOverlay || !beginButton) {
+      this.enableInput();
+      return;
+    }
+
+    if (window.__INTRO_SHOWN) {
+      introOverlay.classList.add('hidden');
       this.enableInput();
       return;
     }
@@ -1039,6 +1338,7 @@ export default class ShrineScene extends Phaser.Scene {
     const handleBegin = () => {
       introOverlay.classList.add('hidden');
       beginButton.removeEventListener('click', handleBegin);
+      window.__INTRO_SHOWN = true;
       this.currentNPC = 'baize';
       this.lastNPC = null;
       this.openDialogue('Baize', 'baize');
