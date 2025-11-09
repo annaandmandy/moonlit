@@ -3,78 +3,108 @@
     "area": "Qingqiu Village",
     "beast": "Unknown Serpent Shade",
     "text": "The only witness insists \"multiple shadows\" slid away from the altar after the scream.",
-    "timestamp": "2025-11-09T13:08:08.516604Z"
+    "timestamp": "2025-11-09T13:20:11.286701Z"
   },
   {
     "area": "Qingqiu Village",
     "beast": "Unknown Serpent Shade",
     "text": "Blue phosphorescence remains on the altarpiece.",
-    "timestamp": "2025-11-09T13:08:34.432410Z"
+    "timestamp": "2025-11-09T13:20:13.259438Z"
   },
   {
     "area": "Qingqiu Village",
     "beast": "Unknown Serpent Shade",
     "text": "Broken feathers and claw marks litter the ground, but every direction is different — as if multiple attackers collided.",
-    "timestamp": "2025-11-09T13:08:37.071762Z"
+    "timestamp": "2025-11-09T13:20:15.625269Z"
   },
   {
     "area": "Entrance Hall",
     "beast": "Bifang",
     "text": "Charred floor tiles form spiral scorch marks, consistent with fire-element flight bursts.",
-    "timestamp": "2025-11-09T13:09:20.536602Z"
+    "timestamp": "2025-11-09T13:21:22.017283Z"
   },
   {
     "area": "Entrance Hall",
     "beast": "Bifang",
     "text": "Smoke residue reveals traces of copper and oil, suggesting controlled ignition rather than wildfire.",
-    "timestamp": "2025-11-09T13:09:21.789515Z"
+    "timestamp": "2025-11-09T13:21:25.770746Z"
   },
   {
-    "area": "Entrance Hall",
-    "beast": "Bifang",
-    "text": "A feather burned halfway through lies beside an extinguished torch — same pigment as Bifang’s plumage.",
-    "timestamp": "2025-11-09T13:09:25.511178Z"
+    "area": "Water Temple",
+    "beast": "Xiangliu",
+    "text": "Residual venom stains on the altar pool surface test positive for ancient toxin markers.",
+    "timestamp": "2025-11-09T13:21:30.810547Z"
+  },
+  {
+    "area": "Ancient Library",
+    "beast": "Xingxing",
+    "text": "Dusty scrolls are mis-shelved — all on the topic of spirits serving humans.",
+    "timestamp": "2025-11-09T13:21:52.550169Z"
+  },
+  {
+    "area": "Ancient Library",
+    "beast": "Xingxing",
+    "text": "White fur strands cling to a ladder leading to the forbidden archive balcony.",
+    "timestamp": "2025-11-09T13:21:58.076040Z"
   },
   {
     "area": "Forest Shrine",
     "beast": "Kui",
     "text": "Lightning scars run down the shrine’s stone columns, though no storm was recorded that night.",
-    "timestamp": "2025-11-09T13:10:10.632253Z"
+    "timestamp": "2025-11-09T13:22:02.456350Z"
   },
   {
     "area": "Spirit Garden",
     "beast": "Qingniao",
     "text": "A trail of shimmering dust leads from the pond to the northern wall, suggesting rapid aerial descent.",
-    "timestamp": "2025-11-09T13:11:10.236525Z"
+    "timestamp": "2025-11-09T13:22:14.081317Z"
   },
   {
-    "area": "Blood Altar",
-    "beast": "Qiongqi",
-    "text": "A talisman fragment bears the word 'Justice' written backwards — Qiongqi’s symbol of inverted morality.",
-    "timestamp": "2025-11-09T13:11:17.616718Z"
+    "area": "Mountain Pass",
+    "beast": "Yingzhao",
+    "text": "A messenger’s seal carved in bone was found cracked beside a cliff drop.",
+    "timestamp": "2025-11-09T13:22:18.893796Z"
   },
   {
-    "area": "Blood Altar",
-    "beast": "Qiongqi",
-    "text": "Traces of human and beast blood mingle at the center stone; both partially crystallized by heat.",
-    "timestamp": "2025-11-09T13:11:19.646325Z"
+    "area": "Mountain Pass",
+    "beast": "Yingzhao",
+    "text": "Horse-like hoofprints with deep talon impressions appear at intervals along the mountain trail.",
+    "timestamp": "2025-11-09T13:22:25.371858Z"
   },
   {
-    "area": "Moonlit Summit",
-    "beast": "Jiuweihu",
-    "text": "A trail of golden fur leads toward the ridge where moonlight is strongest.",
-    "timestamp": "2025-11-09T13:11:54.036134Z"
+    "area": "Mountain Pass",
+    "beast": "Yingzhao",
+    "text": "Wind-bent grasses form circular depressions, evidence of powerful wingbeats.",
+    "timestamp": "2025-11-09T13:22:26.363037Z"
   },
   {
     "area": "Moonlit Summit",
     "beast": "Jiuweihu",
     "text": "A broken mirror charm lies beside the path — fox magic often uses reflection illusions.",
-    "timestamp": "2025-11-09T13:11:55.223922Z"
+    "timestamp": "2025-11-09T13:22:31.673095Z"
   },
   {
     "area": "Moonlit Summit",
     "beast": "Jiuweihu",
     "text": "Faint perfume and paw prints encircle the summit’s ritual stone.",
-    "timestamp": "2025-11-09T13:12:21.216456Z"
+    "timestamp": "2025-11-09T13:22:32.462291Z"
+  },
+  {
+    "area": "Moonlit Summit",
+    "beast": "Jiuweihu",
+    "text": "A trail of golden fur leads toward the ridge where moonlight is strongest.",
+    "timestamp": "2025-11-09T13:23:20.361614Z"
+  },
+  {
+    "area": "Blood Altar",
+    "beast": "Qiongqi",
+    "text": "Traces of human and beast blood mingle at the center stone; both partially crystallized by heat.",
+    "timestamp": "2025-11-09T13:23:41.421773Z"
+  },
+  {
+    "area": "Blood Altar",
+    "beast": "Qiongqi",
+    "text": "Deep claw marks gouge the altar’s base, angled as if tearing upward from within.",
+    "timestamp": "2025-11-09T13:23:42.386091Z"
   }
 ]

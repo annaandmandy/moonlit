@@ -80,8 +80,42 @@ class gameAgent:
         print(char_dia)
         return char_dia
 
-# import random
-# while trail_start:
-#     choice = random.choice([1,2,3])
-#     event, cur_npc = user_act(event, choice)
-#     event = char_act(cur_npc)
+import random
+
+
+def run_trial(event):
+    game, npc_pool = setup_trial(event)
+    round_count = 0
+
+    while game.trail:
+        print(f"\nRound {round_count + 1} ----")
+
+        choice = random.choice([1, 3])
+        cur_npc = game.user_act(choice)
+
+        if cur_npc not in npc_pool:
+            print(f"[System] {cur_npc} not found in npc_pool.")
+            continue
+
+        npc = npc_pool[cur_npc]
+        npc_dialogue = npc.speak(game.event)
+
+        game.public_dialogue.append({cur_npc: npc_dialogue})
+        game.event["game_logs"].append({cur_npc: npc_dialogue})
+        print(f"\n[{cur_npc.lower()}]: {npc_dialogue}\n")
+
+        round_count += 1
+        if 5 < round_count < 15:
+            result = call_ollama(f"""
+                You are the trial narrator. 
+                The following is the dialogue so far:
+                {game.public_dialogue}
+                Determine if the judge made the decision that who is the killer.
+                Respond with 'continue' or 'end'.
+            """)
+            if "end" in str(result).lower():
+                game.trail = False
+                print(">>> The trial has ended (LLM decided).")
+                break
+
+    return game.public_dialogue
